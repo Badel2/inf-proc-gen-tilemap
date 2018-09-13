@@ -46,6 +46,7 @@ Game.run = function (context) {
 };
 
 Game.tick = function (elapsed) {
+    window.requestAnimationFrame(this.tick);
     // compute delta time in seconds -- also cap it
     var delta = (elapsed - this._previousElapsed) / 1000.0;
     delta = Math.min(delta, 0.25); // maximum delta of 250 ms
@@ -53,8 +54,6 @@ Game.tick = function (elapsed) {
 
     this.update(delta);
     this.render();
-    // needs redraw?
-    window.requestAnimationFrame(this.tick);
 }.bind(Game);
 
 // override these methods to create the demo
