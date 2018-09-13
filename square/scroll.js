@@ -1,5 +1,6 @@
 var map = {
     tsize: 32,
+    // 2 layers
     layers: Array(2).fill(new Map()),
     getTile: function (layer, col, row) {
         // We must use a string as a key because two arrays
@@ -64,23 +65,26 @@ Game.load = function () {
 };
 
 Game.init = function () {
-    Keyboard.listenForEvents(
-        [Keyboard.LEFT, Keyboard.RIGHT, Keyboard.UP, Keyboard.DOWN]);
     this.tileAtlas = Loader.getImage('tiles');
     this.camera = new Camera(map, 512, 512);
     this.showGrid = true;
 };
 
 Game.update = function (delta) {
-    // handle camera movement with arrow keys
-    var dirx = 0;
-    var diry = 0;
-    if (Keyboard.isDown(Keyboard.LEFT)) { dirx = -1; }
-    if (Keyboard.isDown(Keyboard.RIGHT)) { dirx = 1; }
-    if (Keyboard.isDown(Keyboard.UP)) { diry = -1; }
-    if (Keyboard.isDown(Keyboard.DOWN)) { diry = 1; }
+    // maybe scroll here?
+};
 
-    this.camera.move(delta, dirx, diry);
+Game._drawTile = function (x, y, v) {
+    var colors = ["white", "green", "red"];
+    if (v < 3) {
+        this.ctx.fillStyle = colors[v];
+        this.ctx.fillRect(
+            Math.round(x),  // target x
+            Math.round(y), // target y
+            this.camera.tsize, // target width
+            this.camera.tsize // target height
+        );
+    }
 };
 
 Game._drawLayer = function (layer) {
@@ -93,23 +97,29 @@ Game._drawLayer = function (layer) {
 
     //console.log([startCol, endCol, startRow, endRow, offsetX, offsetY]);
 
-    // TODO: iterator over the Map instead
-    for (var c = startCol; c <= endCol; c++) {
-        for (var r = startRow; r <= endRow; r++) {
-            var tile = map.getTile(layer, c, r);
-            //console.log(tile);
-            var x = (c - startCol) * this.camera.tsize + offsetX;
-            var y = (r - startRow) * this.camera.tsize + offsetY;
-            if (tile !== 0) { // 0 => empty tile
-                var colors = ["white", "green", "red"];
-                if (tile <= 2) {
-                    this.ctx.fillStyle = colors[tile];
-                    this.ctx.fillRect(
-                        Math.round(x),  // target x
-                        Math.round(y), // target y
-                        this.camera.tsize, // target width
-                        this.camera.tsize // target height
-                    );
+    // Few elements set: iterate over the layers[layer] Map
+    // Many elements set: iterate over each tile
+    if (map.layers[layer].size < (endCol - startCol) * (endRow - startRow)) {
+        map.layers[layer].forEach((v, k) => {
+            var xy = k.split(",").map(a => Number.parseInt(a));
+            var c = xy[0];
+            var r = xy[1];
+            if (c >= startCol && c <= endCol && r >= startRow && r <= endRow) {
+                //console.log(tile);
+                var x = (c - startCol) * this.camera.tsize + offsetX;
+                var y = (r - startRow) * this.camera.tsize + offsetY;
+                this._drawTile(x, y, v);
+            }
+        });
+    } else {
+        for (var c = startCol; c <= endCol; c++) {
+            for (var r = startRow; r <= endRow; r++) {
+                var v = map.getTile(layer, c, r);
+                //console.log(tile);
+                var x = (c - startCol) * this.camera.tsize + offsetX;
+                var y = (r - startRow) * this.camera.tsize + offsetY;
+                if (v != undefined) { // undefined => empty tile
+                    this._drawTile(x, y, v);
                 }
             }
         }
@@ -191,6 +201,16 @@ Game.getSelection = function(layer, value) {
         }
     });
     return s;
+};
+
+Game.clearSelection = function(layer) {
+    map.layers[layer].clear();
+};
+
+Game.setSelection = function(layer, value, keys) {
+    keys.forEach(k => {
+        map.setTile(layer, k[0], k[1], value);
+    });
 };
 
 Game.scrollBy = function(x, y) {
