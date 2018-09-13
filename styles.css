@@ -4,7 +4,8 @@ body {
 }
 
 canvas {
-    background: #000;
+    background: #FFF;
+    border: 1px solid black;
 }
 
 a, a:hover, a:visited {
