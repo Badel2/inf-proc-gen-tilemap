@@ -60,7 +60,7 @@ Camera.prototype.centerAt = function (x, y) {
 
 Game.load = function () {
     return [
-        Loader.loadImage('tiles', '../assets/tiles.png'),
+        //Loader.loadImage('tiles', '../assets/tiles.png'),
     ];
 };
 
@@ -68,6 +68,9 @@ Game.init = function () {
     this.tileAtlas = Loader.getImage('tiles');
     this.camera = new Camera(map, 512, 512);
     this.showGrid = true;
+    this.centerAt(0, 0);
+    // Dirty flag: only render if true, remember to set it when changing state
+    this.dirty = true;
 };
 
 Game.update = function (delta) {
@@ -88,10 +91,11 @@ Game._drawTile = function (x, y, v) {
 };
 
 Game._drawLayer = function (layer) {
+    // + 1 because when the width is not a multiple of tsize things get weird
     var startCol = Math.floor(this.camera.x / this.camera.tsize);
-    var endCol = startCol + (this.camera.width / this.camera.tsize);
+    var endCol = startCol + (this.camera.width / this.camera.tsize) + 1;
     var startRow = Math.floor(this.camera.y / this.camera.tsize);
-    var endRow = startRow + (this.camera.height / this.camera.tsize);
+    var endRow = startRow + (this.camera.height / this.camera.tsize) + 1;
     var offsetX = -this.camera.x + startCol * this.camera.tsize;
     var offsetY = -this.camera.y + startRow * this.camera.tsize;
 
@@ -149,6 +153,11 @@ Game._drawLayer = function (layer) {
 };
 
 Game.render = function () {
+    if (!this.dirty) { return; }
+    this.dirty = false;
+    // clear previous frame
+    this.ctx.fillStyle = "white";
+    this.ctx.fillRect(0, 0, 512, 512);
     // draw map background layer
     this._drawLayer(0);
     // draw map top layer
@@ -171,6 +180,7 @@ Game.mouse_coords_to_game_coords = function(x, y) {
 };
 
 Game.clickTile = function(x, y) {
+    this.dirty = true;
     var txty = this.mouse_coords_to_game_coords(x, y);
     var tx = txty[0];
     var ty = txty[1];
@@ -204,23 +214,28 @@ Game.getSelection = function(layer, value) {
 };
 
 Game.clearSelection = function(layer) {
+    this.dirty = true;
     map.layers[layer].clear();
 };
 
 Game.setSelection = function(layer, value, keys) {
+    this.dirty = true;
     keys.forEach(k => {
         map.setTile(layer, k[0], k[1], value);
     });
 };
 
 Game.scrollBy = function(x, y) {
+    this.dirty = true;
     this.camera.moveRaw(x, y);
 };
 
 Game.zoomBy = function(f) {
+    this.dirty = true;
     this.camera.zoom(f);
 };
 
 Game.centerAt = function(x, y) {
+    this.dirty = true;
     this.camera.centerAt(Number.parseInt(x), Number.parseInt(y));
 };
