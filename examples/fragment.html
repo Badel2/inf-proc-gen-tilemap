@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+    <title>Tilemaps examples - Scrolling map</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../styles.css" type="text/css">
+
+    <script src="../json-stringify-pretty-compact.js"></script>
+    <script src="../common.js"></script>
+    <script src="fragment.js"></script>
+</head>
+<body>
+
+<header class="main-header">
+    <h1><a href="../index.html">Tilemaps examples</a></h1>
+    <p>Select map<br>Click to select a tile. Click again to change color.</p>
+</header>
+
+<div class="main-wrapper">
+    <button onClick="Game.zoomBy(0.8)">ZOOM -</button>
+    <button onClick="Game.zoomBy(1.25)">ZOOM +</button>
+    <input id="center_x" size=2>
+    <input id="center_z" size=2>
+    <button id="center_button">CENTER</button>
+    <canvas id="demo" width="512" height="512"></canvas>
+    <div id="position_info"></div>
+
+    <textarea id="selection_output"></textarea>
+    <button onClick="load_selection()">LOAD JSON</button>
+
+    <footer class="main-footer">
+        <p>Source code on <a href="https://github.com/mozdevs/gamedev-js-tiles" target="_top">the Github repository</a>.</p>
+    </footer>
+</div><!-- main wrapper -->
+
+</body>
+</html>
