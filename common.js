@@ -82,6 +82,7 @@ window.onload = function () {
     var dragging = null;
 
     // Add event listener for `click` events.
+    // TODO: touchstart for mobile support
     elem.addEventListener('mousedown', function(event) {
         var x = event.pageX - elemLeft,
             y = event.pageY - elemTop;
@@ -101,8 +102,12 @@ window.onload = function () {
             pos_div.innerHTML = "Chunk x: " + Math.floor(tx) + ", z: " + Math.floor(ty);
             pos_div.innerHTML += " --- Block x: " + Math.floor(tx*16) + ", z: " + Math.floor(ty*16);
         }
+    }, false);
 
+    window.addEventListener('mousemove', function(event) {
         if (dragging) {
+            var x = event.pageX - elemLeft,
+                y = event.pageY - elemTop;
             if (dragging.actuallyScrolling == false && (Math.abs(dragging.x - x) > 10 || Math.abs(dragging.y - y) > 10)) {
                 dragging.actuallyScrolling = true;
             }
@@ -113,11 +118,16 @@ window.onload = function () {
             }
         }
     }, false);
+
     elem.addEventListener('mouseup', function(event) {
         var x = event.pageX - elemLeft,
             y = event.pageY - elemTop;
 
-        if (dragging.actuallyScrolling == false) {
+        if (dragging == null) {
+            // The window event handler was executed first, gg
+            console.error('BUG: The window event handler was executed before the elem event handler for event mouseup');
+        }
+        if (dragging && dragging.actuallyScrolling == false) {
             Game.clickTile(x, y);
 
             // Update selection textarea
@@ -127,6 +137,10 @@ window.onload = function () {
                 slime_chunks_not: Game.getSelection(0, 2)
             }, { maxLength: 20 });
         }
+        dragging = null;
+    }, false);
+
+    window.addEventListener('mouseup', function(event) {
         dragging = null;
     }, false);
 

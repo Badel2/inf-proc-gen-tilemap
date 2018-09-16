@@ -26,33 +26,37 @@ function generateTile(x, y) {
 }
 
 function generateFragment(fx, fy) {
-    console.log("Generating fragment: " + fx + ", " + fy);
-    // Create off-screen canvas
-    var c = document.createElement('canvas');
-    c.width = FRAG_SIZE;
-    c.height = FRAG_SIZE;
-    var ctx = c.getContext('2d');
-    // Generate fragment
-    var imageData = ctx.createImageData(FRAG_SIZE, FRAG_SIZE);
-    for(var x=0; x<FRAG_SIZE; x++) {
-        for(var y=0; y<FRAG_SIZE; y++) {
-            var pixel = generateTile(fx * FRAG_SIZE + x, fy * FRAG_SIZE + y);
-            var i = ((y * FRAG_SIZE) + x) * 4;
-            var colorIndices = [i, i+1, i+2, i+3];
+    return new Promise(
+        function(resolve, reject) {
+            console.log("Generating fragment: " + fx + ", " + fy);
+            // Create off-screen canvas
+            var c = document.createElement('canvas');
+            c.width = FRAG_SIZE;
+            c.height = FRAG_SIZE;
+            var ctx = c.getContext('2d');
+            // Generate fragment
+            var imageData = ctx.createImageData(FRAG_SIZE, FRAG_SIZE);
+            for(var x=0; x<FRAG_SIZE; x++) {
+                for(var y=0; y<FRAG_SIZE; y++) {
+                    var pixel = generateTile(fx * FRAG_SIZE + x, fy * FRAG_SIZE + y);
+                    var i = ((y * FRAG_SIZE) + x) * 4;
+                    var colorIndices = [i, i+1, i+2, i+3];
 
-            var redIndex = colorIndices[0];
-            var greenIndex = colorIndices[1];
-            var blueIndex = colorIndices[2];
-            var alphaIndex = colorIndices[3];
+                    var redIndex = colorIndices[0];
+                    var greenIndex = colorIndices[1];
+                    var blueIndex = colorIndices[2];
+                    var alphaIndex = colorIndices[3];
 
-            imageData.data[redIndex] = pixel[0];
-            imageData.data[greenIndex] = pixel[1];
-            imageData.data[blueIndex] = pixel[2];
-            imageData.data[alphaIndex] = pixel[3];
+                    imageData.data[redIndex] = pixel[0];
+                    imageData.data[greenIndex] = pixel[1];
+                    imageData.data[blueIndex] = pixel[2];
+                    imageData.data[alphaIndex] = pixel[3];
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+            resolve(c);
         }
-    }
-    ctx.putImageData(imageData, 0, 0);
-    return c;
+    );
 }
 
 var map = {
@@ -62,9 +66,16 @@ var map = {
     getFragment: function (layer, fx, fy) {
         var k = fx + "," + fy;
         var frag = this.layers[layer].get(k);
+        var this_layer = this.layers[layer];
         if (frag == undefined) {
-            frag = generateFragment(fx, fy);
-            this.layers[layer].set(k, frag);
+            generateFragment(fx, fy).then(function(value) {
+                //console.log(value); // Success!
+                console.log("Finished generating fragment: " + fx + ", " + fy);
+                this_layer.set(k, value);
+                Game.dirty = true;
+            }, function(reason) {
+                console.error(reason); // Error!
+            });
         }
         return frag;
     }
@@ -154,17 +165,19 @@ Game._drawLayer = function (layer) {
             var x = (c - startCol) * this.camera.tsize + offsetX;
             var y = (r - startRow) * this.camera.tsize + offsetY;
             var fragmentImage = map.getFragment(layer, Math.round(c), Math.round(r));
-            this.ctx.drawImage(
-                fragmentImage, // image
-                0, // source x
-                0, // source y
-                map.tsize, // source width
-                map.tsize, // source height
-                Math.round(x),  // target x
-                Math.round(y), // target y
-                this.camera.tsize, // target width
-                this.camera.tsize // target height
-            );
+            if (fragmentImage != undefined) {
+                this.ctx.drawImage(
+                    fragmentImage, // image
+                    0, // source x
+                    0, // source y
+                    map.tsize, // source width
+                    map.tsize, // source height
+                    Math.round(x),  // target x
+                    Math.round(y), // target y
+                    this.camera.tsize, // target width
+                    this.camera.tsize // target height
+                );
+            }
         }
     }
     console.log("Drawing fragments: " + i);
