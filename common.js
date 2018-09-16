@@ -179,7 +179,8 @@ window.onload = function () {
     ['touchend', 'mouseup'].forEach(function(n) {
         window.addEventListener(n, function(e) {
             if (n == 'touchend') {
-                e.preventDefault();
+                // This breaks the page
+                //e.preventDefault();
             }
             dragging = null;
         }, false)
