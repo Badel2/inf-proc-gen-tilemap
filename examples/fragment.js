@@ -87,7 +87,7 @@ function Camera(map, width, height) {
     this.width = width;
     this.height = height;
     this.scale = 8.0;
-    this.tsize = map.tsize * this.scale;
+    this.tsize = Math.round(map.tsize * this.scale);
 }
 
 Camera.SPEED = 256; // pixels per second
@@ -109,7 +109,7 @@ Camera.prototype.zoom = function (newF) {
     var old_center_y = (this.y + this.height / 2) / this.tsize - 0.5;
     this.scale *= newF;
     this.scale = Math.max(this.scale, 0.01);
-    this.tsize = map.tsize * this.scale;
+    this.tsize = Math.round(map.tsize * this.scale);
     // Move camera so that center stays constant
     this.centerAt(old_center_x, old_center_y);
 };
@@ -128,7 +128,17 @@ Game.load = function () {
 Game.init = function () {
     this.tileAtlas = Loader.getImage('tiles');
     this.camera = new Camera(map, 512, 512);
-    this.showGrid = false;
+    this.showGrid = true;
+    var gs = document.getElementById('gridSize');
+    if (gs) {
+        this.gridSize = Math.round(Math.pow(2, gs.value));
+        gs.oninput = function() {
+            Game.gridSize = Math.round(Math.pow(2, gs.value));
+            Game.dirty = true;
+        }
+    } else {
+        this.gridSize = map.tsize;
+    }
     this.centerAt(0, 0);
     this.layerCanvas = map.layers.map(function() {
         var c = document.createElement('canvas');
@@ -186,10 +196,18 @@ Game._drawLayer = function (layer) {
 
     // Draw grid lines
     if (this.showGrid) {
+        var gridSize = Math.round(this.gridSize * this.camera.scale);
+        var startCol = Math.floor(this.camera.x / gridSize);
+        var endCol = startCol + (this.camera.width / gridSize) + 1;
+        var startRow = Math.floor(this.camera.y / gridSize);
+        var endRow = startRow + (this.camera.height / gridSize) + 1;
+        var offsetX = -this.camera.x + startCol * gridSize;
+        var offsetY = -this.camera.y + startRow * gridSize;
+
         this.ctx.strokeStyle = "#AAA";
         this.ctx.lineWidth = 1;
         for (var c = startCol; c <= endCol; c++) {
-            var x = (c - startCol) * this.camera.tsize + offsetX;
+            var x = (c - startCol) * gridSize + offsetX;
             x = Math.round(x);
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
@@ -197,7 +215,7 @@ Game._drawLayer = function (layer) {
             this.ctx.stroke();
         }
         for (var r = startRow; r <= endRow; r++) {
-            var y = (r - startRow) * this.camera.tsize + offsetY;
+            var y = (r - startRow) * gridSize + offsetY;
             y = Math.round(y);
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
