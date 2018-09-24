@@ -198,9 +198,9 @@ Game._drawLayer = function (layer) {
     if (this.showGrid) {
         var gridSize = Math.round(this.gridSize * this.camera.scale);
         var startCol = Math.floor(this.camera.x / gridSize);
-        var endCol = startCol + (this.camera.width / gridSize) + 1;
+        var endCol = startCol + (this.camera.width / gridSize);
         var startRow = Math.floor(this.camera.y / gridSize);
-        var endRow = startRow + (this.camera.height / gridSize) + 1;
+        var endRow = startRow + (this.camera.height / gridSize);
         var offsetX = -this.camera.x + startCol * gridSize;
         var offsetY = -this.camera.y + startRow * gridSize;
 
