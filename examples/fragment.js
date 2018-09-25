@@ -17,11 +17,12 @@ function generateTile(x, y) {
     // Just some testing pattern where each fragment is easy to distinguish
     var mx = mod(x, 256);
     var my = mod(y, 256);
+    var mxy = mod(x+y, 2) * 255;
     var mm = mod(fy, 2) == 0 ? mx : my;
     switch (mod(fx+fy*3, 9)) {
-        case 0: case 2: case 6: case 8: return [0, 0, mm, 255];
-        case 1: case 3: case 5: case 7: return [mm, 0, 0, 255];
-        case 4: return [0, mm, 0, 255];
+        case 0: case 2: case 6: case 8: return [0, mxy, mm, 255];
+        case 1: case 3: case 5: case 7: return [mm, mxy, 0, 255];
+        case 4: return [mxy, mm, 0, 255];
     }
 }
 
@@ -201,14 +202,16 @@ Game._drawLayer = function (layer) {
     //this.ctx.drawImage(fragmentImage, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 
     // Draw grid lines
+    //console.log([this.camera.tsize, startCol, endCol, startRow, endRow, offsetX, offsetY]);
     if (this.showGrid) {
-        var gridSize = Math.round(this.gridSize * this.camera.scale);
+        var gridSize = this.gridSize * this.camera.scale;
         var startCol = Math.floor(this.camera.x / gridSize);
         var endCol = startCol + (this.camera.width / gridSize) + 1;
         var startRow = Math.floor(this.camera.y / gridSize);
         var endRow = startRow + (this.camera.height / gridSize) + 1;
         var offsetX = -this.camera.x + startCol * gridSize;
         var offsetY = -this.camera.y + startRow * gridSize;
+        //console.log([gridSize, startCol, endCol, startRow, endRow, offsetX, offsetY]);
 
         this.ctx.strokeStyle = "#AAA";
         this.ctx.lineWidth = 1;
