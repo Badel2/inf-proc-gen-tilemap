@@ -87,6 +87,7 @@ function Camera(map, width, height) {
     this.width = width;
     this.height = height;
     this.scale = 8.0;
+    // If tsize is not integer, white lines appear between fragments
     this.tsize = Math.round(map.tsize * this.scale);
 }
 
@@ -117,6 +118,11 @@ Camera.prototype.zoom = function (newF) {
 Camera.prototype.centerAt = function (x, y) {
     this.x = (x + 0.5) * this.tsize - this.width / 2;
     this.y = (y + 0.5) * this.tsize - this.height / 2;
+}
+
+Camera.prototype.centerAtBlock = function (x, y) {
+    this.x = ((x + 0.5) / map.tsize) * this.tsize - this.width / 2;
+    this.y = ((y + 0.5) / map.tsize) * this.tsize - this.height / 2;
 }
 
 Game.load = function () {
@@ -198,9 +204,9 @@ Game._drawLayer = function (layer) {
     if (this.showGrid) {
         var gridSize = Math.round(this.gridSize * this.camera.scale);
         var startCol = Math.floor(this.camera.x / gridSize);
-        var endCol = startCol + (this.camera.width / gridSize);
+        var endCol = startCol + (this.camera.width / gridSize) + 1;
         var startRow = Math.floor(this.camera.y / gridSize);
-        var endRow = startRow + (this.camera.height / gridSize);
+        var endRow = startRow + (this.camera.height / gridSize) + 1;
         var offsetX = -this.camera.x + startCol * gridSize;
         var offsetY = -this.camera.y + startRow * gridSize;
 
@@ -279,3 +285,8 @@ Game.centerAt = function(x, y) {
     this.dirty = true;
     this.camera.centerAt(Number.parseInt(x), Number.parseInt(y));
 };
+
+Game.centerAtBlock = function(x, y) {
+    this.dirty = true;
+    this.camera.centerAtBlock(Number.parseInt(x), Number.parseInt(y));
+}

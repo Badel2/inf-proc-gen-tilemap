@@ -72,7 +72,12 @@ window.onload = function () {
     center_butt.onclick = function() {
         var x = document.getElementById('center_x').value;
         var z = document.getElementById('center_z').value;
-        Game.centerAt(x, z);
+        // Center at block if supported, otherwise center at chunk/fragment
+        if(Game.centerAtBlock) {
+            Game.centerAtBlock(x, z);
+        } else {
+            Game.centerAt(x, z);
+        }
     };
     var elem = document.getElementById('demo'),
     elemLeft = elem.offsetLeft,
