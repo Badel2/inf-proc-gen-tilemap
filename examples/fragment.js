@@ -202,29 +202,29 @@ Game._drawLayer = function (layer) {
     //this.ctx.drawImage(fragmentImage, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
 
     // Draw grid lines
-    //console.log([this.camera.tsize, startCol, endCol, startRow, endRow, offsetX, offsetY]);
     if (this.showGrid) {
-        var gridSize = this.gridSize * this.camera.scale;
-        var startCol = Math.floor(this.camera.x / gridSize);
-        var endCol = startCol + (this.camera.width / gridSize) + 1;
-        var startRow = Math.floor(this.camera.y / gridSize);
-        var endRow = startRow + (this.camera.height / gridSize) + 1;
-        var offsetX = -this.camera.x + startCol * gridSize;
-        var offsetY = -this.camera.y + startRow * gridSize;
-        //console.log([gridSize, startCol, endCol, startRow, endRow, offsetX, offsetY]);
+        // Returns fragment coords
+        var xy = this.mouse_coords_to_game_coords_float(0, 0);
+        var startCol = Math.floor(xy[0]) * map.tsize;
+        var startRow = Math.floor(xy[1]) * map.tsize;
+        var xy = this.mouse_coords_to_game_coords_float(512, 512);
+        var endCol= Math.floor(xy[0] + 1) * map.tsize;
+        var endRow = Math.floor(xy[1] + 1) * map.tsize;
 
         this.ctx.strokeStyle = "#AAA";
         this.ctx.lineWidth = 1;
-        for (var c = startCol; c <= endCol; c++) {
-            var x = (c - startCol) * gridSize + offsetX;
+        // c and r are world-coordinates
+        for (var c = startCol; c <= endCol; c += this.gridSize) {
+            // Convert c to fragment-coordinates, and then to mouse/canvas coordinates
+            var x = this.game_coords_to_mouse_coords_float(c / map.tsize, 0)[0];
             x = Math.round(x);
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, 512);
             this.ctx.stroke();
         }
-        for (var r = startRow; r <= endRow; r++) {
-            var y = (r - startRow) * gridSize + offsetY;
+        for (var r = startRow; r <= endRow; r += this.gridSize) {
+            var y = this.game_coords_to_mouse_coords_float(0, r / map.tsize)[1];
             y = Math.round(y);
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
@@ -250,6 +250,12 @@ Game.mouse_coords_to_game_coords_float = function(x, y) {
     var tx = (x + this.camera.x) / this.camera.tsize;
     var ty = (y + this.camera.y) / this.camera.tsize;
     return [tx, ty];
+};
+
+Game.game_coords_to_mouse_coords_float = function(tx, ty) {
+    var x = (tx * this.camera.tsize) - this.camera.x;
+    var y = (ty * this.camera.tsize) - this.camera.y;
+    return [x, y];
 };
 
 Game.mouse_coords_to_game_coords = function(x, y) {
